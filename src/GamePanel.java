@@ -72,7 +72,6 @@ public class GamePanel extends JPanel implements ActionListener {
 
     }
 
-
     public void newApple() {
         appleX = random.nextInt((int)SCREEN_WIDTH/UNIT_SIZE)* UNIT_SIZE;
         appleY = random.nextInt((int)SCREEN_HEIGHT/UNIT_SIZE)* UNIT_SIZE;
@@ -140,6 +139,7 @@ public class GamePanel extends JPanel implements ActionListener {
         graphic.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics gameOverMetrics = getFontMetrics(graphic.getFont());
         graphic.drawString("Game Over", (SCREEN_WIDTH - gameOverMetrics.stringWidth("Game Over"))/2, SCREEN_HEIGHT/2);
+        //todo add reset button
         //Score Text
         graphic.setColor(Color.red);
         graphic.setFont(new Font("Ink Free", Font.BOLD, 40));
