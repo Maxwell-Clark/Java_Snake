@@ -1,27 +1,28 @@
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
-import javax.swing.*;
 import java.util.Random;
 
 public class GamePanel extends JPanel implements ActionListener {
 
-
     static final int SCREEN_WIDTH = 600;
     static final int SCREEN_HEIGHT = 600;
     static final int UNIT_SIZE = 25;
-    static final int GAME_UNITS = (SCREEN_WIDTH * SCREEN_HEIGHT)/UNIT_SIZE;
-    static final int DELAY = 75;
-    final int x[] = new int[GAME_UNITS];
-    final int y[] = new int[GAME_UNITS];
+    static int GAME_UNITS = (SCREEN_WIDTH * SCREEN_HEIGHT)/UNIT_SIZE;
+    static final int DELAY = 50;
+    int x[] = new int[GAME_UNITS];
+    int y[] = new int[GAME_UNITS];
     int bodyParts = 6;
     int applesEaten;
     int appleX;
     int appleY;
     char direction = 'R';
     boolean running = false;
-    Timer timer;
+    boolean resetGame = false;
+    Timer gameTimer;
+    Timer gameOverTimer; // to be used to automatically restart
     Random random;
+
 
     GamePanel() {
         random = new Random();
@@ -33,31 +34,36 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void startGame() {
-        newApple();
+        levelManager();
         running = true;
-        timer = new Timer(DELAY, this);
-        timer.start();
+        gameTimer = new Timer(DELAY, this);
+        gameTimer.start();
     }
 
     public void paintComponent(Graphics graphic) {
         super.paintComponent(graphic);
-        draw(graphic);
+        if(!resetGame) draw(graphic);
+        else resetGame();
     }
 
     public void draw(Graphics graphic) {
 
         if(running) {
-            graphic.setColor(Color.green);
+            if((applesEaten % 100) == 0) {
+                graphic.setColor(new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255)));
+            }
+            else graphic.setColor(Color.green);
 
             graphic.fillOval(appleX, appleY, UNIT_SIZE, UNIT_SIZE);
 
             for (int i = 0; i < bodyParts; i++) {
-                if (i == 0) {
-                    graphic.setColor(Color.red);
-                    graphic.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
-                } else {
+                if ((i % 2) == 0) {
                     graphic.setColor(Color.red);
                     graphic.setColor(new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255)));
+                    graphic.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
+
+                } else {
+                    graphic.setColor(new Color(random.nextInt(100), random.nextInt(255), random.nextInt(150)));
                     graphic.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
                 }
             }
@@ -73,6 +79,12 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void newApple() {
+        levelManager();
+        appleX = random.nextInt((int)SCREEN_WIDTH/UNIT_SIZE)* UNIT_SIZE;
+        appleY = random.nextInt((int)SCREEN_HEIGHT/UNIT_SIZE)* UNIT_SIZE;
+    }
+
+    public void levelManager() {
         appleX = random.nextInt((int)SCREEN_WIDTH/UNIT_SIZE)* UNIT_SIZE;
         appleY = random.nextInt((int)SCREEN_HEIGHT/UNIT_SIZE)* UNIT_SIZE;
     }
@@ -102,7 +114,7 @@ public class GamePanel extends JPanel implements ActionListener {
         if((x[0] == appleX) && (y[0] == appleY)) {
             bodyParts++;
             applesEaten++;
-            newApple();
+            levelManager();
         }
     }
 
@@ -129,7 +141,7 @@ public class GamePanel extends JPanel implements ActionListener {
             running = false;
         }
         if(running == false) {
-            timer.stop();
+            gameTimer.stop();
         }
     }
 
@@ -139,16 +151,32 @@ public class GamePanel extends JPanel implements ActionListener {
         graphic.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics gameOverMetrics = getFontMetrics(graphic.getFont());
         graphic.drawString("Game Over", (SCREEN_WIDTH - gameOverMetrics.stringWidth("Game Over"))/2, SCREEN_HEIGHT/2);
-        //todo add reset button
+        //Reset Text
+        graphic.setColor(Color.green);
+        graphic.setFont(new Font("Ink Free", Font.BOLD, 30));
+        FontMetrics restartMetrics = getFontMetrics(graphic.getFont());
+        graphic.drawString("Press R to Restart", (SCREEN_WIDTH - restartMetrics.stringWidth("Pres R to Restart"))/2, SCREEN_HEIGHT/3);
         //Score Text
         graphic.setColor(Color.red);
         graphic.setFont(new Font("Ink Free", Font.BOLD, 40));
         FontMetrics scoreMetrics = getFontMetrics(graphic.getFont());
         graphic.drawString("Score: " + applesEaten, (SCREEN_WIDTH - scoreMetrics.stringWidth("Score: " + applesEaten))/2, graphic.getFont().getSize());
+
     }
+
+    public void resetGame() {
+        running = true;
+        applesEaten = 0;
+        bodyParts = 6;
+        x = new int[GAME_UNITS];
+        y = new int[GAME_UNITS];
+        direction = 'R';
+        startGame();
+        resetGame = false;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
-
         if(running) {
             move();
             checkApple();
@@ -181,7 +209,9 @@ public class GamePanel extends JPanel implements ActionListener {
                         direction = 'D';
                     }
                     break;
-
+            }
+            if(!running && (event.getKeyCode() == KeyEvent.VK_R)) {
+                resetGame();
             }
         }
     }
